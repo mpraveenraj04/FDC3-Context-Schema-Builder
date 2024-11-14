@@ -268,7 +268,7 @@ export class AppComponent {
     if (!this.generatedJsonString) {
       
       this.generatedJsonString = this.generateJSON(); // Ensure JSON is generated
-      console.log("inside if generatePojo ::",this.generatedJsonString)
+     
     }
      
     // Prepare data to be sent in the request
@@ -278,10 +278,7 @@ export class AppComponent {
       typeName: 'GeneratedPojo'
     };
 
-    console.log("inside generatePojo ::",data.jsonString)
-    console.log("inside generatePojo ::",data.targetLanguage)
-    console.log("inside generatePojo ::",data.typeName)
-
+     
     // Make POST request to the Node.js backend
     this.http.post<any>('http://localhost:5000/generatepojo', data)
       .subscribe(response => {
