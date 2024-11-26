@@ -24,7 +24,8 @@
 
   <div class="right-pane">
     <h2>JSON Schema</h2>
-    <p-dropdown [options]="languageOptions" [(ngModel)]="selectedLanguage" placeholder="Select Language" class="margin-right"></p-dropdown>
+    <p-dropdown [options]="languageOptions" [(ngModel)]="selectedLanguage" placeholder="Select Language"
+      class="margin-right"></p-dropdown>
     <button pButton icon="pi pi-cog" label="Generate POJO" (click)="generatePojo()"></button>
 
     <pre id="json-output">{{ generateJSON() }}</pre>
@@ -42,7 +43,7 @@
 </div>
 
 
-<ng-template #nestedTemplate let-property="property" let-index="index" let-level="level">
+<ng-template #nestedTemplate let-property="property" let-index="index" let-level="level" let-parentList="parentList">
   <div class="property-row" [style.marginLeft.px]="level * 20">
     <div class="property-fields-inline">
       <input pInputText [(ngModel)]="property.name" placeholder="Property Name" />
@@ -67,14 +68,13 @@
       </div>
       <button pButton icon="pi pi-plus" label="Add Nested Property" *ngIf="property.type === 'object'"
         (click)="addProperty(property)"></button>
-      <button pButton icon="pi pi-times"
-        (click)="removeProperty(property.parent?.children || properties, index)"></button>
+      <button pButton icon="pi pi-times" (click)="removeProperty(parentList || properties, index)"></button>
     </div>
 
     <div *ngIf="property.children?.length" class="nested-properties">
       <ng-container *ngFor="let nestedChild of property.children; let j = index">
         <ng-container [ngTemplateOutlet]="nestedTemplate"
-          [ngTemplateOutletContext]="{ property: nestedChild, index: j, level: level + 1 }"></ng-container>
+          [ngTemplateOutletContext]="{ property: nestedChild, index: j, level: level + 1 , parentList: property.children}"></ng-container>
       </ng-container>
     </div>
   </div>

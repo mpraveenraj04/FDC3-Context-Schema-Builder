@@ -44,7 +44,7 @@ interface Property {
 
 export class AppComponent {
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   languageOptions = [
     { label: 'Java', value: 'java' },
@@ -62,7 +62,7 @@ export class AppComponent {
 
   selectedLanguage = 'java';
   generatedCode = '';
-  generatedJsonString ='';
+  generatedJsonString = '';
 
   properties: Property[] = [];
   compositionTypeKeyToReplace: string = "";
@@ -141,7 +141,7 @@ export class AppComponent {
 
 
   addProperty(parent?: Property) {
-    const newProperty: Property = { name: '', type: '', description: '', properties: [] };
+    const newProperty: Property = { name: '', type: '', description: '', properties: [], children: [] };
 
     if (parent) {
       parent.children = parent.children || []; // Ensure children array exists
@@ -152,7 +152,10 @@ export class AppComponent {
   }
 
   removeProperty(parentList: Property[], index: number) {
-    parentList.splice(index, 1);
+    if (parentList && index >= 0 && index < parentList.length) {
+      parentList.splice(index, 1); // Remove the specific property from the parent list
+      console.log(`Removed property at index ${index}`);
+    }
   }
 
 
@@ -183,13 +186,13 @@ export class AppComponent {
       if (schemaString) {
         schemaString = schemaString.slice(1, -1);
       }
-      
+
 
       baseSchemaString = baseSchemaString.replace(regex, schemaString);
-      this.generatedJsonString =  baseSchemaString.replace(/,\s*}/g, "}").replace(/,\s*]/g, "]");
+      this.generatedJsonString = baseSchemaString.replace(/,\s*}/g, "}").replace(/,\s*]/g, "]");
       return baseSchemaString;
     } else {
-      
+
       console.error('Dummy property not found in the base schema.');
       this.generatedJsonString = baseSchemaString.replace(/,\s*}/g, "}").replace(/,\s*]/g, "]");
       return baseSchemaString;
@@ -216,16 +219,16 @@ export class AppComponent {
 
   // Recursive function to handle nested properties
   buildSchemaObject(property: Property, target: any, requiredFields: string[]) {
-    
+
     const propertyName = property.name;
 
-    
+
     const propertySchema: any = {
-      type: property.type,     
+      type: property.type,
       title: property.title || '',
       description: property.description || ''
     };
-    
+
 
     // Handle string-specific properties
     if (property.type === 'string' && property.stringOption) {
@@ -239,7 +242,7 @@ export class AppComponent {
       }
     } else if (property.type === 'const') {
       propertySchema.const = property.stringValue;
-    } else if ( property.type === '$ref') {
+    } else if (property.type === '$ref') {
       propertySchema.$ref = property.stringValue;
     }
 
@@ -266,11 +269,11 @@ export class AppComponent {
   generatePojo() {
 
     if (!this.generatedJsonString) {
-      
+
       this.generatedJsonString = this.generateJSON(); // Ensure JSON is generated
-     
+
     }
-     
+
     // Prepare data to be sent in the request
     const data = {
       jsonString: this.generatedJsonString,
@@ -278,7 +281,7 @@ export class AppComponent {
       typeName: 'GeneratedPojo'
     };
 
-     
+
     // Make POST request to the Node.js backend
     this.http.post<any>('http://localhost:5000/generatepojo', data)
       .subscribe(response => {
