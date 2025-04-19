@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -9,6 +9,7 @@ import { PanelModule } from 'primeng/panel';
 import { CheckboxModule } from 'primeng/checkbox';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { SchemaFakerService } from './schema-faker.service';
 
 interface Property {
   name: string;
@@ -42,9 +43,19 @@ interface Property {
 
 
 
-export class AppComponent {
+export class AppComponent implements OnInit {
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private schemaFakerService: SchemaFakerService,
+    private http: HttpClient
+  ) { }
+
+  ngOnInit(): void {
+    this.loadFdc3RefSchemas();
+  }
+
+
+  refSchemaOptions: { label: string, value: string }[] = [];
 
   languageOptions = [
     { label: 'Java', value: 'java' },
@@ -63,6 +74,8 @@ export class AppComponent {
   selectedLanguage = 'java';
   generatedCode = '';
   generatedJsonString = '';
+  generatedExample: string = '';
+  isJsonValid: boolean = true;
 
   properties: Property[] = [];
   compositionTypeKeyToReplace: string = "";
@@ -274,6 +287,8 @@ export class AppComponent {
 
     }
 
+    console.log("this.generatedJsonString to backend:", this.generatedJsonString)
+
     // Prepare data to be sent in the request
     const data = {
       jsonString: this.generatedJsonString,
@@ -281,10 +296,11 @@ export class AppComponent {
       typeName: 'GeneratedPojo'
     };
 
-
-    // Make POST request to the Node.js backend
+    // Make POST request to the Python backend
     this.http.post<any>('http://localhost:5000/generatepojo', data)
       .subscribe(response => {
+        console.log("Response received from backend:", response);
+
         if (response && response.code) {
           this.generatedCode = response.code; // Save code to display or format if needed
           this.downloadCodeFile(response.code, this.selectedLanguage);
@@ -294,6 +310,10 @@ export class AppComponent {
       }, error => {
         console.error('Error generating POJO:', error);
       });
+
+    const fakeExample = this.schemaFakerService.generateExampleFromSchema(this.generatedJsonString);
+    this.generatedExample = JSON.stringify(fakeExample, null, 2);
+
   }
 
   downloadCodeFile(code: string, language: string) {
@@ -314,4 +334,30 @@ export class AppComponent {
     // Release the Blob URL to free memory
     window.URL.revokeObjectURL(url);
   }
+
+  onExampleBlur() {
+    try {
+      const parsed = JSON.parse(this.generatedExample);
+      this.generatedExample = JSON.stringify(parsed, null, 2);
+      this.isJsonValid = true;
+    } catch {
+      this.isJsonValid = false;
+    }
+  }
+
+  loadFdc3RefSchemas(): void {
+    this.http.get<string[]>('http://localhost:5000/getfdc3refschemalist')
+      .subscribe(
+        data => {
+          this.refSchemaOptions = data.map(schema => ({
+            label: schema,
+            value: `${schema}`
+          }));
+        },
+        error => {
+          console.error('Failed to load FDC3 schemas', error);
+        }
+      );
+  }
+
 }

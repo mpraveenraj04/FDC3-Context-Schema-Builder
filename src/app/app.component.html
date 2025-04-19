@@ -24,22 +24,26 @@
 
   <div class="right-pane">
     <h2>JSON Schema</h2>
-    <p-dropdown [options]="languageOptions" [(ngModel)]="selectedLanguage" placeholder="Select Language"
-      class="margin-right"></p-dropdown>
-    <button pButton icon="pi pi-cog" label="Generate POJO" (click)="generatePojo()"></button>
-
+    <div class="dropdown-container">
+      <p-dropdown [options]="languageOptions" [(ngModel)]="selectedLanguage" placeholder="Select Language"></p-dropdown>
+      <button pButton icon="pi pi-cog" label="Generate POJO" (click)="generatePojo()"></button>
+    </div>
     <pre id="json-output">{{ generateJSON() }}</pre>
+
+    <div class="right-pane">
+      <h2>Json Example</h2>
+
+      <textarea [(ngModel)]="generatedExample" (blur)="onExampleBlur()" [ngClass]="{ 'invalid-json': !isJsonValid }"
+        rows="20"
+        style="width: 100%; font-family: 'Courier New', monospace; padding: 10px; border-radius: 5px; background-color: #f4f4f4; border: 1px solid #ccc; resize: vertical;"></textarea>
+
+      <small *ngIf="!isJsonValid" style="color: red;">⚠ Invalid JSON format</small>
+    </div>
 
 
   </div>
 
-  <!-- <div class="right-pane">
-    <h2>JSON generatedCode</h2>
 
-    <pre >{{ generatedCode }}</pre>
- 
-
-  </div> -->
 </div>
 
 
@@ -58,9 +62,14 @@
         <input *ngIf="property.stringOption" pInputText [(ngModel)]="property.stringValue" placeholder="Enter Value" />
       </div>
 
-      <!-- Show input field only when type is 'const' or '$ref' -->
-      <input *ngIf="property.type === 'const' || property.type === '$ref'" pInputText [(ngModel)]="property.stringValue"
-        placeholder="Enter Const or Reference Value" />
+      <!-- Show input if type is 'const' -->
+      <input *ngIf="property.type === 'const'" pInputText [(ngModel)]="property.stringValue"
+        placeholder="Enter Const Value" />
+
+      <!-- Show dropdown if type is '$ref' -->
+      <p-dropdown *ngIf="property.type === '$ref'" [options]="refSchemaOptions" [(ngModel)]="property.stringValue"
+        placeholder="Select Reference Schema">
+      </p-dropdown>
 
       <div class="checkbox-container">
         <p-checkbox *ngIf="property.type !== 'object'" [(ngModel)]="property.required" binary="true"></p-checkbox>
